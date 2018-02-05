@@ -176,6 +176,99 @@ For this workshop, it is sufficient to follow along using
 [play.rust-lang.org][play].
 ]
 
+---
+
+class: center, middle
+
+# Strings
+
+**Warning:** they're complicated 😅
+
+---
+
+.left-column[
+## String Types
+]
+
+.right-column[
+## `String`
+
+- Allocated on the heap
+
+- Growable buffer
+
+- Can be converted to `&str` at no cost
+
+```rust
+let s: String = "I can change".into();
+```
+
+## `&str`
+
+- Called a "string slice"
+
+- View into memory
+
+- Can be converted to `String` with some cost
+
+```rust
+let s: &str = "I will never change";
+```
+]
+
+---
+
+.left-column[
+## String Types
+## Unicode
+]
+
+.right-column[
+All strings in Rust are encoded as UTF-8.
+
+```rust
+let english = "The same thing?";
+let spanish = "¿La misma cosa?";
+
+println!("{}\n{}", english.len(), spanish.len());
+```
+
+This outputs **15** and **16**, which might surprise some of you.
+
+English characters use one byte but other languages may use more.
+]
+
+---
+
+.left-column[
+## String Types
+## Unicode
+## Characters
+]
+
+.right-column[
+If we can't trust characters to be one byte, what do we do?
+
+**Solution:** iterators!
+
+```rust
+let spanish = "¿La misma cosa?";
+
+for ch in spanish.chars() {
+    println!("{}", ch);
+}
+```
+
+The `.chars()` iterator will provide a `char`, which can encode a Unicode code
+point.
+
+**Warning:** the `char` type in Rust **is not** like `char` in C:
+
+- C `char` is 1 byte
+
+- Rust `char` is 4 bytes
+]
+
 [rust]:   https://github.com/rust-lang/rust/
 [play]:   https://play.rust-lang.org/
 [rustup]: https://www.rustup.rs/
