@@ -220,6 +220,28 @@ let s: &str = "I will never change";
 
 .left-column[
 ## String Types
+]
+
+.right-column[
+The `String` type can be converted seamlessly to `&str`:
+
+```rust
+fn gimme(string: &str) { /* ... */ }
+
+let owned = String::from("You own me");
+let slice = "This is a `&str` string";
+
+gimme(&owned); // Requires passing `owned` as reference
+gimme(slice);  // `slice` is already a reference
+```
+
+Rust does this conversion automatically because it has zero computational cost.
+]
+
+---
+
+.left-column[
+## String Types
 ## Unicode
 ]
 
