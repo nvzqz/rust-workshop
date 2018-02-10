@@ -228,8 +228,8 @@ The `String` type can be converted seamlessly to `&str`:
 ```rust
 fn gimme(string: &str) { /* ... */ }
 
-let owned = String::from("You own me");
-let slice = "This is a `&str` string";
+let owned: String = "You own me".into();
+let slice: &str   = "I am a reference";
 
 gimme(&owned); // Requires passing `owned` as reference
 gimme(slice);  // `slice` is already a reference
