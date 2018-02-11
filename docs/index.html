@@ -274,6 +274,8 @@ println!("{}\n{}", english.len(), spanish.len());
 This outputs **15** and **16**, which might surprise some of you.
 
 English characters use one byte but other languages may use more.
+
+If we can't trust characters to be one byte, what do we do?
 ]
 
 ---
@@ -281,11 +283,9 @@ English characters use one byte but other languages may use more.
 .left-column[
 ## String Types
 ## Unicode
-## Characters
 ]
 
 .right-column[
-If we can't trust characters to be one byte, what do we do?
 
 **Solution:** iterators!
 
