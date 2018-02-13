@@ -194,6 +194,61 @@ class: center, middle
 
 ---
 
+<h1 align="center">Comparing Rust</h1>
+
+.left-column[
+## ...with Python
+]
+
+.right-column[
+```python
+def main():
+    for count in range(0, 3):
+        print("{}. Hello World!".format(count))
+```
+
+```rust
+fn main() {
+    for count in 0..3 {
+        println!("{}. Hello World!", count);
+    }
+}
+```
+]
+
+---
+
+<h1 align="center">Comparing Rust</h1>
+
+.left-column[
+## ...with Python
+## ...with Swift
+]
+
+.right-column[
+```swift
+enum Resource<T> {
+    case busy
+    case ready(T)
+    case unavailable
+}
+
+let res = Resource.ready(42)
+```
+
+```rust
+enum Resource<T> {
+    Busy,
+    Ready(T),
+    Unavailable,
+}
+
+let res = Resource::Ready(42);
+```
+]
+
+---
+
 class: center, middle
 
 # Strings
