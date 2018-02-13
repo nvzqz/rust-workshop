@@ -267,6 +267,75 @@ let res = Resource::Ready(42);
 
 class: center, middle
 
+# Arrays
+
+---
+
+.left-column[
+## Array Types
+]
+
+.right-column[
+## `[T; N]`
+
+- Can be allocated on the stack or heap
+
+- Fixed compile-time size
+
+```rust
+let arr = [0, 1, 1, 2, 3, 5, 8];
+let rep = [42; 100];
+```
+
+## `Vec<T>`
+
+- Heap allocated
+
+- Growable
+
+- Equivalent to `ArrayList` (Java) or `std::vector` (C++)
+
+```rust
+let vec = vec![1, 2, 3, 4, 5];
+let rep = vec![20; vec.len()];
+```
+]
+
+---
+
+.left-column[
+## Array Types
+## Slices
+]
+
+```rust
+fn byte_me(slice: &[u8]) { /* ... */ }
+
+let bytes: Vec<u8> = get_bytes();
+byte_me(&bytes);
+
+byte_me(&[0xCA, 0xFE, 0xBA, 0xBE]);
+```
+
+Slices allow for getting a view into an array or vector.
+
+This is such a common operation, that the conversion from `&Vec<T>` or `&[T; N]`
+to `&[T]` is automatic.
+
+```rust
+fn shuffle(bytes: &mut [u8]) { /* ... */ }
+
+let mut bytes = vec![/* ... */];
+shuffle(&mut bytes);
+```
+
+Unless mutating the buffer itself, there's no reason to require `&mut Vec<T>` as
+a parameter. `&mut [T]` is _always_ more flexible.
+
+---
+
+class: center, middle
+
 # Strings
 
 **Warning:** they're complicated 😅
