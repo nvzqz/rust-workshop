@@ -477,6 +477,162 @@ point.
 
 ---
 
+class: center, middle
+
+# Rust's Ownership Model
+
+(the fun stuff)
+
+---
+
+.left-column[
+## Ownership
+]
+
+.right-column[
+```rust
+let mut v = vec!['a', 'b', 'c'];
+let x = v;
+
+v.extend_from_slice(&['x', 'y', 'z']);
+
+println!("{:?}", v);
+```
+
+1. Here we allocate a vector of 3 `char`s and assign it to "v".
+
+2. We're going to be mutating "v", so let's keep the original somewhere. We'll
+assign "v" to "x".
+
+3. Now let's go ahead and print out our original vector.
+
+   When we run this, it's expected to print out:
+
+   ```
+   ['a', 'b', 'c', 'x', 'y', 'z']
+   ```
+
+4. Let's go compile our code!
+]
+
+---
+
+.left-column[
+## Ownership
+]
+
+.right-column[
+```rust
+let mut v = vec!['a', 'b', 'c'];
+let x = v;
+
+v.extend_from_slice(&['x', 'y', 'z']);
+
+println!("{:?}", v);
+```
+
+```
+let x = v;
+    - value moved here
+
+v.extend_from_slice(&['x', 'y', 'z']);
+^ value used here after move
+
+println!("{:?}", v);
+                 ^ value used here after move
+
+note: move occurs because `v` has type `std::vec::Vec<char>`,
+which does not implement the `Copy` trait
+```
+
+Ugh... hwat?
+
+Let's look at something similar in C++.
+]
+
+---
+
+.left-column[
+## Ownership
+]
+
+.right-column[
+```cpp
+void print_vec(std::vector<int> const& vec) {
+    for (auto const& c : vec)
+        std::cout << c << ' ';
+    cout << "\n";
+}
+
+std::vector<int> v = { 1, 2, 3 };
+auto x = v;
+
+v.push_back(20);
+
+print_vec(v);
+print_vec(x);
+```
+
+This outputs:
+
+```
+1 2 3 20
+1 2 3
+```
+
+When we bind the value of "v" to "x", it copies the underlying vector.
+
+We can do the same in Rust, but it needs to be done explicitly.
+]
+
+---
+
+.left-column[
+## Ownership
+]
+
+.right-column[
+```rust
+let mut v = vec!['a', 'b', 'c'];
+let x = v.clone(); // Make a copy
+
+v.extend_from_slice(&['x', 'y', 'z']);
+
+println!("{:?}", v);
+```
+]
+
+Let's compile this now...
+
+# 🤞
+
+---
+
+.left-column[
+## Ownership
+]
+
+.right-column[
+```rust
+let mut v = vec!['a', 'b', 'c'];
+let x = v.clone(); // Make a copy
+
+v.extend_from_slice(&['x', 'y', 'z']);
+
+println!("{:?}", v);
+```
+
+Surprise! It compiles correctly and outputs:
+
+```
+['a', 'b', 'c', 'x', 'y', 'z']
+```
+
+Probably annoying, right?
+]
+
+---
+
 <h1 align="center">Rust Resources</h1>
 
 ## [Rust by Example](https://rustbyexample.com/)
