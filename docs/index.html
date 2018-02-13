@@ -27,6 +27,14 @@
       }
 
       .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+      .pull-left {
+        float: left;
+        width: 47%;
+      }
+      .pull-right {
+        float: right;
+        width: 47%;
+      }
 
       /* Two-column layout */
       .left-column {
@@ -262,6 +270,34 @@ let res = Resource::Ready(42);
 ## Compound Types
 - Arrays: `[1, 2, 3]` (homogenous)
 - Tuples: `(1, true)` (heterogenous)
+
+---
+
+# Reference Types
+
+.pull-left[
+## Rust-style (safe)
+
+- `&T`
+
+- `&mut T`
+
+- `Box<T>`
+
+Non-nullable and statically checked at compile-time to ensure correct usage.
+]
+
+.pull-right[
+## C-style (raw, unchecked)
+
+- `*const T`
+
+- `*mut T`
+
+<br>
+
+Raw, nullable pointers that you can find in C as `const T*` and `T*`.
+]
 
 ---
 
