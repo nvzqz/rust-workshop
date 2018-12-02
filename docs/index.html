@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Intro to Rust</title>
+    <title>Rust & WebAssembly</title>
     <meta charset="utf-8">
     <style>
       @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
@@ -12,21 +12,80 @@
       h1, h2, h3 {
         font-family: 'Yanone Kaffeesatz';
         font-weight: normal;
+        /* color: blue; */
       }
       .remark-slide-content h1 { font-size: 3em; }
       .remark-slide-content h2 { font-size: 1.9em; }
       .remark-slide-content h3 { font-size: 1.3em; }
 
-      a {
-        color: rgb(249, 38, 114);
-        text-decoration: none;
-      }
-      code {
-        border-radius: 8px;
-        line-height: 1.3em;
+      .remark-slide-number {
+        position: inherit;
+        opacity: unset;
       }
 
-      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+      .remark-slide-number .progress-bar-container {
+        position: absolute;
+        bottom: 0;
+        height: 6px;
+        display: block;
+        left: 0;
+        right: 0;
+      }
+
+      .remark-slide-number .progress-bar {
+        height: 100%;
+        background-color: #f92672;
+      }
+
+      .remark-slide-scaler {
+        box-shadow: none; /* remove slide frame */
+      }
+      .remark-slide-container {
+        background: black; /* match slide container color with slides */
+      }
+
+      .inverse {
+        background: #3c2d9e;
+        color: #f92672;
+        text-shadow: 0 0 20px #111;
+      }
+      .inverse h1, .inverse h2 {
+        color: #f3f3f3;
+        line-height: 0.8em;
+      }
+      .inverse a {
+        color: #f3f3f3;
+      }
+
+      a {
+        color: #f92672;
+        text-decoration:solid;
+      }
+      .remark-inline-code {
+        line-height: 1.3em;
+        background-color: #f3f3f3;
+        padding-top: 1px;
+        padding-left: 3px;
+        padding-right: 3px;
+        /* padding: 2px; */
+        padding-bottom: 3px;
+        color: #f92672;
+      }
+
+      #ferris-banner {
+        left: 0;
+        right: 0;
+        top: 0;
+        position:absolute;
+        background: white;
+        width: 100%;
+      }
+
+      .remark-code, .remark-inline-code {
+        font-family: 'Ubuntu Mono';
+        border-radius: 4px;
+      }
+      .remark-code-line-highlighted     { background-color: rgb(94, 51, 67); }
       .pull-left {
         float: left;
         width: 47%;
@@ -56,10 +115,17 @@
   <body>
     <textarea id="source">
 
-class: center, middle
+class: center, middle, inverse
 
-![Ferris](img/ferris.gif)
-# Intro to Rust
+<div id="ferris-banner"><br><img src="img/ferris.gif" alt="Ferris" width="50%"></div>
+
+<br>
+
+# Rust & WebAssembly
+
+_an introduction to developing modern systems_
+
+by Nikolai Vazquez ([@nvzqz](https://github.com/nvzqz))
 
 ([nvzqz.github.io/rust-workshop](https://nvzqz.github.io/rust-workshop))
 
@@ -70,15 +136,19 @@ class: center, middle
 ]
 
 .right-column[
+<div align="center">
+  <img style="margin:-40px" src="img/rust-logo.svg", width="60%">
+</div>
+
 Rust is a systems programming language that:
 
 - Runs blazingly fast without compromise
 
 - Prevents segfaults (invalid memory access)
 
-- Guarantees thread safety
+- Guarantees thread safety (via `Send` and `Sync` traits)
 
-- Is open source ([github.com/rust-lang/rust/][rust])
+- Is open source ([github.com/rust-lang/rust][rust])
 and actively developed by Mozilla and the community
 ]
 
@@ -118,7 +188,7 @@ and actively developed by Mozilla and the community
 .left-column[
 ## What is Rust?
 ## Rust Features
-## Who uses Rust
+## Who Uses Rust
 ]
 
 .right-column[
@@ -134,11 +204,13 @@ These companies are currently using Rust in production:
 
 - Coursera
 
+- Amazon Web Services
+
 - NPM (Node.js Package Manger)
 
 - Google
 
-- [Others](https://www.rust-lang.org/en-US/friends.html)
+- [Others...](https://www.rust-lang.org/en-US/friends.html)
 ]
 
 ???
@@ -150,6 +222,7 @@ These companies are currently using Rust in production:
 | Atlassian | | Analyzing petabytes of source code |
 | Postmates | | Used by Infrastructure team to write system daemons |
 | Coursera  | | Programming Assignments in secured Docker containers |
+| AWS       | | AWS Lambda runtime |
 | NPM       | | Replacing C and rewriting performance-critical bottlenecks in the registry service architecture |
 | Google    | | Components of Fuchsia (experimental OS) |
 
@@ -158,23 +231,70 @@ These companies are currently using Rust in production:
 .left-column[
 ## What is Rust?
 ## Rust Features
-## Who uses Rust
-## Installing Rust
+## Who Uses Rust
+## Rust Setup
 ]
 
 .right-column[
-The Rust compiler and toolchain can be installed by following the instructions
-at [rustup.rs][rustup].
+- The Rust compiler and toolchain (including Cargo) can be installed by
+following the instructions at [rustup.rs][rustup]:
 
-Alternatively, run the following (macOS or Linux):
+  Run the following on *nix (Unix, Linux, macOS):
 
-```sh
-curl https://sh.rustup.rs -sSf | sh
-```
+  ```sh
+  curl https://sh.rustup.rs -sSf | sh
+  ```
 
-For this workshop, it is sufficient to follow along using
-[play.rust-lang.org][play].
+  Otherwise if on Windows 64-bit, download and run
+  [`rustup‑init.exe`](https://win.rustup.rs/x86_64).
+
+  For just learning Rust, it is sufficient to follow along using
+  [play.rust-lang.org][play]. See the next slide for setting up WebAssembly.
+
+- Once that’s installed, `cargo-generate` should be installed:
+
+  ```sh
+  cargo install cargo-generate
+  ```
 ]
+
+---
+
+.left-column[
+## What is Rust?
+## Rust Features
+## Who Uses Rust
+## Rust Setup
+## WASM Setup
+]
+
+.right-column[
+- [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
+
+  Run the following on *nix (Unix, Linux, macOS):
+
+  ```sh
+  curl \
+  https://rustwasm.github.io/wasm-pack/installer/init.sh \
+  -sSf | sh
+  ```
+
+  Otherwise if on Windows 64-bit, download and run [`wasm-pack-init.exe`](https://github.com/rustwasm/wasm-pack/releases/download/v0.5.1/wasm-pack-init.exe).
+
+- [npm](https://www.npmjs.com/get-npm) or if already installed, make sure it is up to date:
+
+  ```sh
+  npm install npm@latest -g
+  ```
+]
+
+---
+
+class: center, middle, inverse
+
+# Comparing Rust
+
+_safety first, buckle up_
 
 ---
 
@@ -214,6 +334,12 @@ fn main() {
     }
 }
 ```
+
+The `!` in Rust signifies that `println!()` is a macro which, unlike functions,
+takes a variable number of arguments.
+
+In Python, if `count` is not provided, the code crashes at runtime. In Rust, the
+code fails to compile if the argument for `{}` is missing.
 ]
 
 ---
@@ -245,23 +371,105 @@ enum Resource<T> {
 
 let res = Resource::Ready(42);
 ```
+
+Enums are sum types, where a variant may store a value.
 ]
+
+---
+
+<h1 align="center">Comparing Rust</h1>
+
+.left-column[
+## ...with Python
+## ...with Swift
+## ...with C++
+]
+
+.right-column[
+```cpp
+int &push_answer(std::vector<int> &buf) {
+    buf.push_back(42);
+    return buf.back(); // undefined if `buf` is empty
+}
+```
+
+```rust
+use std::os::raw::c_int;
+
+fn push_answer(buf: &mut Vec<c_int>) -> &mut c_int {
+    buf.push(42);
+    buf.last_mut().unwrap() // crash if `buf` is empty
+}
+```
+
+In C++, if `buf` is resized after calling `push_answer()`, the returned pointer
+becomes invalid unbeknownst to you. Rust prevents accessing the returned
+`&mut c_int` if `buf` is accessed within the same scope, since both point to the
+same mutable data (enforced mutual exclusion).
+]
+
+---
+
+<h1 align="center">Comparing Rust</h1>
+
+.left-column[
+## ...with Python
+## ...with Swift
+## ...with C++
+
+See [playground](https://play.rust-lang.org/?version=nightly&mode=debug&edition=2015&gist=cfe7103cb031118e5478bc779505a288)
+
+**Note:** Requires nightly Rust for [non-lexical lifetimes](https://github.com/rust-lang/rfcs/blob/master/text/2094-nll.md)
+]
+
+.right-column[
+```rust
+#![feature(nll)] // Enable "non-lexical lifetimes" (nightly)
+
+// Note: `{:?}` denotes use of `Debug` formatting
+fn main() {
+    let mut x = vec![1, 2, 3];   // `x` is growable
+    println!("{:?}", x);         // "[1, 2, 3]"
+
+    let y = push_answer(&mut x); // `y` is ref to 42 in `x`
+    println!("{:?}", y);         // "42"
+
+    // Legal because `y` is not used again
+    println!("{:?}", x);         // "[1, 2, 3, 42]"
+
+    x.clear();                   // empty contents of `x`
+    println!("{:?}", x);         // "[]"
+
+    // Illegal because 42 was removed
+    // println!("{:?}", y);
+}
+```
+]
+
+---
+
+class: center, middle, inverse
+
+# Types
+
+_a typical language topic_
 
 ---
 
 # Primitives
 
-## Scalars
-- Signed integers: `i8`, `i16`, `i32`, `i64`, `isize`
-- Unsigned integers: `u8`, `u16`, `u32`, `u64`, `usize`
-- Floating point: `f32`, `f64`
-- Unicode scalar: `char` (values like `'a'`, `'α'`, and `'∞'`)
-- Boolean: `bool` (either `true` or `false`)
-- Unit/empty type: `()`
-
-## Compound Types
-- Arrays: `[1, 2, 3]` (homogenous)
-- Tuples: `(1, true)` (heterogenous)
+| Category                                    | &nbsp | Types |
+| :------------------------------------------ | ----- | :--- |
+| Signed integers                             | | `i8`, `i16`, `i32`, `i64`, `i128`, `isize` |
+| Unsigned integers                           | | `u8`, `u16`, `u32`, `u64`, `u128`, `usize` |
+| Floating point numbers                      | | `f32`, `f64` |
+| Unicode scalar: `'a'`, `'α'`, `'∞'`         | | `char` |
+| Boolean: either `true` or `false`           | | `bool` |
+| Unit/empty tuple                            | | `()` |
+| Nullable value: `Some(T)` or `None`         | | `Option<T>` |
+| Either value (`Ok(T)`) or error (`Err(E)`)  | | `Result<T, E>` |
+| Arrays (homogenous): `[1, 2, 3]`            | | `[T; N]` (`[i32; 3]`) |
+| Tuples (heterogenous): `(1, true)`          | | `(T, U)` (`(i32, bool)`) |
 
 ---
 
@@ -270,13 +478,16 @@ let res = Resource::Ready(42);
 .pull-left[
 ## Rust-style (safe)
 
-- `&T`
+- `&T` (immutable borrow)
 
-- `&mut T`
+- `&mut T` (mutable, mutex borrow)
 
-- `Box<T>`
+- `Box<T>` (mutable, owned)
 
 Non-nullable and statically checked at compile-time to ensure correct usage.
+
+All implement the `Send` marker trait, making them safe to pass into threads
+with move semantics, or stored in `static` values.
 ]
 
 .pull-right[
@@ -288,14 +499,20 @@ Non-nullable and statically checked at compile-time to ensure correct usage.
 
 <br>
 
-Raw, nullable pointers that you can find in C as `const T*` and `T*`.
+Raw, nullable pointers that you can find in C as `const T*` and `T*`, but can
+have unsized types (`*const str`).
+
+Do not implement `Send` and _can't_ be shared between threads nor stored in
+`static` values.
 ]
 
 ---
 
-class: center, middle
+class: center, middle, inverse
 
-# Arrays
+# Arrays & Friends
+
+_an overview of contiguous data storage_
 
 ---
 
@@ -306,26 +523,25 @@ class: center, middle
 .right-column[
 ## `[T; N]`
 
-- Can be allocated on the stack or heap
+- Can be allocated on the stack (default) or heap via `Box`
 
 - Fixed compile-time size
 
 ```rust
-let arr = [0, 1, 1, 2, 3, 5, 8];
-let rep = [42; 100];
+let fib = [0, 1, 1, 2, 3, 5, 8];
+let rep = [42; 100]; // 42 repeated 100 times
 ```
 
 ## `Vec<T>`
 
-- Heap allocated
-
-- Growable
+- Heap allocated and growable
 
 - Equivalent to `ArrayList` (Java) or `std::vector` (C++)
 
 ```rust
-let vec = vec![1, 2, 3, 4, 5];
-let rep = vec![20; vec.len()];
+let vec = vec![1, 2, 3, 4, 5];    // created with macro
+let rep = vec![20; vec.len()];    // 20 repeated 5 times
+let rep: Box<[i32]> = rep.into(); // fixed size slice
 ```
 ]
 
@@ -335,6 +551,9 @@ let rep = vec![20; vec.len()];
 ## Array Types
 ## Slices
 ]
+
+.right-column[
+## `[T]`
 
 ```rust
 fn byte_me(slice: &[u8]) { /* ... */ }
@@ -353,18 +572,131 @@ to `&[T]` is automatic.
 ```rust
 fn shuffle(bytes: &mut [u8]) { /* ... */ }
 
-let mut bytes = vec![/* ... */];
+let mut bytes = vec![1, 2, 3, 4]; // `u8` element inferred
 shuffle(&mut bytes);
 ```
 
-Unless mutating the buffer itself, there's no reason to require `&mut Vec<T>` as
-a parameter. `&mut [T]` is _always_ more flexible.
+**Tip:** Unless growing or shrinking the buffer itself, use `&mut [T]` over
+`&mut Vec<T>` for more flexible inputs.
+]
 
 ---
 
-class: center, middle
+.left-column[
+## Array Types
+## Slices
+## Indexing
+]
+
+.right-column[
+## Bounds-Checking and Panicking
+
+See generated assembly @ [godbolt.org/z/J0K0mP](https://godbolt.org/z/J0K0mP)
+
+```rust
+// Can be cast to integer type from base 0 via `as`
+enum Index {
+    Zero,
+    One,
+    Two,
+}
+
+type Array = [i32; 3];
+
+fn party_crashing_index(a: &Array, i: usize) -> &i32 {
+    // Crash/panic if `i >= a.len()`
+*   &a[i]
+}
+
+fn sober_index(a: &Array, i: Index) -> &i32 {
+    // Never crash/panic because `i < a.len()` always
+*   party_crashing_index(a, i as usize)
+}
+```
+]
+
+---
+
+.left-column[
+## Array Types
+## Slices
+## Indexing
+]
+
+.right-column[
+## Looking Under the Hood
+
+See generated assembly @ [godbolt.org/z/J0K0mP](https://godbolt.org/z/J0K0mP)
+
+```asm
+party_crashing_index:
+        push    rax
+        cmp     rsi, 2  ; compare `i` to `x.len()` (2)
+        ja      .LBB0_2 ; jump to panic if `i > x.len()`
+*       lea     rax, [rdi + 4*rsi]
+        pop     rcx
+        ret
+.LBB0_2: ; code responsible for crashing/panicking
+        lea     rdi, [rip + .Lpanic_bounds_check_loc.1]
+        mov     edx, 3
+*       call    core::panicking::panic_bounds_check@PLT
+        ud2
+
+sober_index: ; call to `party_crashing_index` inlined
+        movzx   eax, sil
+*       lea     rax, [rdi + 4*rax] ; no bounds check
+        ret
+```
+]
+
+---
+
+.left-column[
+## Array Types
+## Slices
+## Indexing
+
+<img style="margin-top:-30px" src="img/marvin_pointing.jpg", width="90%">
+]
+
+.right-column[
+## Don't `panic!()`
+
+If you don't want to risk calls to `panic!()`, there's ways of avoiding it
+altogether:
+
+```rust
+fn sane_indexing(a: &[i32], i: usize) {
+    // `.get()` returns `Option<&i32>`
+    if let Some(x) = a.get(i) {
+        println!("x safely equals {}", x);
+    } else {
+        println!("{} < {}", i, a.len());
+    }
+}
+```
+
+If you're a C aficionado where segfaults are your seatbelt, because the
+operating system _totally_ has your back, you can skip bounds checks with
+`unsafe`:
+
+```rust
+fn cray_indexing(a: &[i32], i: usize) {
+    // `.get_unchecked()` returns `&i32`
+    let x = unsafe { a.get_unchecked(i) };
+    println!("Gotta go fast!! x = {}", x);
+}
+```
+]
+
+---
+
+class: center, middle, inverse
 
 # Strings
+
+_programming: where “strings” & “threads”<br>
+have **nothing** to do with each other_
 
 **Warning:** they're complicated 😅
 
@@ -375,29 +707,30 @@ class: center, middle
 ]
 
 .right-column[
+## `&str`
+
+```rust
+let s: &str = "I will never change";
+```
+
+- Called a "string slice"
+
+- View into memory ("fat" pointer: address & size) stored statically or on the
+stack/heap
+
+- Can be converted to `String` with allocation cost
+
 ## `String`
+
+```rust
+let s: String = "I can change".into();
+```
 
 - Allocated on the heap
 
 - Growable buffer
 
 - Can be converted to `&str` at no cost
-
-```rust
-let s: String = "I can change".into();
-```
-
-## `&str`
-
-- Called a "string slice"
-
-- View into memory
-
-- Can be converted to `String` with some cost
-
-```rust
-let s: &str = "I will never change";
-```
 ]
 
 ---
@@ -501,11 +834,11 @@ point.
 
 ---
 
-class: center, middle
+class: center, middle, inverse
 
 # Rust's Ownership Model
 
-(the fun stuff)
+_the fun stuff_
 
 ---
 
@@ -532,7 +865,7 @@ assign "v" to "x".
 
    When we run this, it's expected to print out:
 
-   ```
+   ```rust
    ['a', 'b', 'c', 'x', 'y', 'z']
    ```
 
@@ -582,14 +915,16 @@ Let's look at something similar in C++.
 
 .right-column[
 ```cpp
-void print_vec(std::vector<int> const& vec) {
+using namespace std;
+
+void print_vec(vector<int> const& vec) {
     for (auto const& c : vec)
-        std::cout << c << ' ';
-    cout << "\n";
+        cout << c << ' ';
+    cout << endl;
 }
 
-std::vector<int> v = { 1, 2, 3 };
-auto x = v;
+vector<int> v = { 1, 2, 3 };
+auto x = v; // copy `v`
 
 v.push_back(20);
 
@@ -599,7 +934,7 @@ print_vec(x);
 
 This outputs:
 
-```
+```rust
 1 2 3 20
 1 2 3
 ```
@@ -648,7 +983,7 @@ println!("{:?}", v);
 
 Surprise! It compiles correctly and outputs:
 
-```
+```rust
 ['a', 'b', 'c', 'x', 'y', 'z']
 ```
 
@@ -657,9 +992,9 @@ Probably annoying, right?
 
 ---
 
-class: center, middle
+class: center, middle, inverse
 
-# Let's Get Func-y
+# Let’s Get Func-y
 
 (to the playground!)
 
@@ -700,6 +1035,13 @@ A curated list of Rust code and resources.
     <script>
       var slideshow = remark.create({
         highlightStyle: 'atom-one-dark',
+        highlightLines: true,
+        slideNumberFormat: (current, total) => `
+          <div class="progress-bar-container">
+            <div class="progress-bar" style="width: ${current/total*100}%">
+            </div>
+          </div>
+        `,
       });
     </script>
   </body>
