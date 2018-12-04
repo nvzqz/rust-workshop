@@ -59,7 +59,7 @@
 
       a {
         color: #f92672;
-        text-decoration: none;
+        text-decoration: solid;
       }
       .remark-inline-code {
         line-height: 1.3em;
@@ -549,7 +549,7 @@ tuple.
 
 - `&T` (immutable borrow)
 
-- `&mut T` (mutable, mutex borrow)
+- `&mut T` (mutable, exclusive borrow)
 
 - `Box<T>` (mutable, owned)
 
@@ -1027,6 +1027,7 @@ let x = v;
 v.extend_from_slice(&['x', 'y', 'z']);
 
 println!("{:?}", v);
+println!("{:?}", x);
 ```
 
 1. Here we allocate a vector of 3 `char`s and assign it to `v`.
@@ -1042,6 +1043,7 @@ assign `v` to `x`.
 
     ```rust
     ['a', 'b', 'c', 'x', 'y', 'z']
+    ['a', 'b', 'c']
     ```
 
 4. Let's go compile our code!
@@ -1061,6 +1063,7 @@ let mut v: Vec<char> = vec!['a', 'b', 'c'];
 v.extend_from_slice(&['x', 'y', 'z']);
 
 println!("{:?}", v);
+println!("{:?}", x);
 ```
 
 Uh oh...
@@ -1135,6 +1138,7 @@ let mut v: Vec<char> = vec!['a', 'b', 'c'];
 v.extend_from_slice(&['x', 'y', 'z']);
 
 println!("{:?}", v);
+println!("{:?}", x);
 ```
 ]
 
@@ -1156,12 +1160,14 @@ let x = v.clone(); // Make a copy
 v.extend_from_slice(&['x', 'y', 'z']);
 
 println!("{:?}", v);
+println!("{:?}", x);
 ```
 
 Surprise! It compiles correctly and outputs:
 
 ```rust
 ['a', 'b', 'c', 'x', 'y', 'z']
+['a', 'b', 'c']
 ```
 
 Probably annoying, right?
@@ -1230,7 +1236,7 @@ But there are cases where it's necessary! If a function takes two references, we
 want to be explicit about which one's lifetime the output is bound to:
 
 ```rust
-fn get_first<'a, T>(a: &'a [T], b: &[T]) -> &'a [T] {
+fn get_first<'a, T>(a: &'a T, b: &T) -> &'a T {
     a
 }
 ```
@@ -1305,12 +1311,12 @@ represented within Rust's type system as an `enum`.
 ```rust
 use std::collections::HashMap;
 
-#[derive(PartialEq)] // generates `==` code
+*#[derive(PartialEq)] // generates `==` code
 enum Json {
     Object(HashMap<String, Json>),
     Array(Vec<Json>),
     String(String),
-    Num(f64),
+    Number(f64),
     Bool(bool),
     Null,
 }
@@ -1320,11 +1326,11 @@ let json = Json::Num(20.0);
 match &json { // pattern match by reference
     Json::Object(ref obj) => {
         let x: &HashMap<String, Json> = obj;
-        assert!(x == obj);
+*       assert!(x == obj);
     },
     Json::Array(ref vec) => {
         let x: &Vec<Json> = vec;
-        assert!(x == vec);
+*       assert!(x == vec);
     },
     _ => {
         // Handle all other cases
@@ -1344,6 +1350,80 @@ Analogous to Java "interfaces" or Swift "protocols"
 ]
 
 .right-column[
+Traits are a contract that types uphold and are most used in generic contexts.
+Here we define a `Square` trait that we implement for all types that implement
+[`Copy`](https://doc.rust-lang.org/std/marker/trait.Copy.html)
+and [`Mul`](https://doc.rust-lang.org/std/ops/trait.Mul.html):
+
+```rust
+use std::ops::Mul;
+
+trait Square {
+    type Output;
+
+    fn square(self) -> Self::Output;
+}
+
+impl<T: Mul + Copy> Square for T {
+    // Some type that results from squaring
+    type Output = <T as Mul>::Output;
+
+    fn square(self) -> Self::Output {
+        self * self // `Copy` needed to duplicate `self`
+    }
+}
+
+fn square_square<T: Square<Output = T>>(x: T) -> T {
+    x.square().square()
+}
+
+fn main() {
+    // Works for `u16` and `u64`
+    assert_eq!(square_square(4u16), 256);
+    assert_eq!(square_square(5u64), 625);
+}
+```
+]
+
+---
+
+.left-column[
+## Structs
+## Enums
+## Traits
+
+Analogous to Java "interfaces" or Swift "protocols"
+]
+
+.right-column[
+Rust's thread safety is partially a result of two traits:
+
+- [`Send`](https://doc.rust-lang.org/std/marker/trait.Send.html):
+Automatically implemented for types that can be transferred across thread
+boundaries—all members implement `Send`.
+
+  ```rust
+  pub unsafe auto trait Send { }
+  ```
+
+- [`Sync`](https://doc.rust-lang.org/std/marker/trait.Sync.html):
+Automatically implemented on types for which it is safe to share references
+between threads—all members implement `Sync`.
+
+  ```rust
+  pub unsafe auto trait Send { }
+  ```
+
+The `unsafe` keyword here means we must be careful about which types implement
+these traits.
+
+```rust
+// Raw pointers can't be sent/shared between threads safely
+struct Ptr(*const i32);
+
+unsafe impl Send for Ptr { }
+unsafe impl Sync for Ptr { }
+```
 ]
 
 ---
@@ -1361,12 +1441,76 @@ _‘goto’ is sooo 1980’s_
 ]
 
 .right-column[
+In Rust, `if` statements can simply work on booleans:
+
+```rust
+let x: bool = // ...
+
+if x {
+    println!("Booyeah!");
+} else {
+    println!("Welp...");
+}
+```
+
+Ternary operators don't exist in Rust like they do in C:
+
+```c
+int y = x ? 20 : 32;
+```
+
+Instead, `if` can be treated as an expression if _all_ branches end with an
+expression.
+
+```rust
+let y = if x { 20 } else { 32 };
+```
 ]
 
 ---
 
 .left-column[
 ## Conditions
+## Pattern Matching
+]
+
+.right-column[
+Values can be matched against, usually in the context of enums:
+
+```rust
+let x: Option<i32> = // ...
+
+if let Some(x) = x {
+    println!("x = {}", x);
+}
+```
+
+With `match`, we can do neat operations such as:
+
+- Treating it as an expression
+
+- Having conditions for certain branches
+
+```rust
+let x: Result<i32, Error> = Ok(20);
+
+let y = match x {
+    Ok(x) if (x % 2 == 0) => x * 7, // `x` is even
+    Ok(x)                 => x * 4, // `x` is odd
+    Err(e)                => panic!("Error: {}", e),
+};
+
+assert_eq!(y, 140);
+```
+
+Think of it like a `switch` statement with superpowers
+]
+
+---
+
+.left-column[
+## Conditions
+## Pattern Matching
 ## Loops
 ]
 
@@ -1379,7 +1523,7 @@ loop {
 }
 ```
 
-Because Rust loooves expressions, you can treat a `loop` as one by `break`-ing
+Because Rust _loves_ expressions, you can treat a `loop` as one by `break`-ing
 out with a value:
 
 ```rust
@@ -1388,6 +1532,7 @@ use std::time::{Duration, Instant};
 let start = Instant::now();
 let wait = Duration::from_secs(1);
 
+// Poor man's timer
 let x = loop {
     if start.elapsed() >= wait {
         break 30;
@@ -1406,15 +1551,73 @@ class: center, middle, inverse
 
 _a fun time_
 
-???
+---
 
-Ideas:
+.left-column[
+## [`Fn`](https://doc.rust-lang.org/std/ops/trait.Fn.html) trait
+]
 
-- Closures
+.right-column[
+Used for functions or closures that can be called repeatedly and have no mutable
+state:
 
-- Mapping and collecting
+```rust
+fn lots_of_fun<T, F>(x: T, fun: F) -> T
+    where F: Fn(T) -> T
+{
+    fun(fun(fun(x)))
+}
 
-- Thread spawning
+let value = lots_of_fun(24, |x| x / 2);
+assert_eq!(value, 3);
+```
+]
+
+---
+
+.left-column[
+## [`Fn`](https://doc.rust-lang.org/std/ops/trait.Fn.html) trait
+## [`FnMut`](https://doc.rust-lang.org/std/ops/trait.FnMut.html) trait
+]
+
+.right-column[
+]
+
+---
+
+.left-column[
+## [`Fn`](https://doc.rust-lang.org/std/ops/trait.Fn.html) trait
+## [`FnMut`](https://doc.rust-lang.org/std/ops/trait.FnMut.html) trait
+## [`FnOnce`](https://doc.rust-lang.org/std/ops/trait.FnOnce.html) trait
+]
+
+.right-column[
+We can actually return an anonymous function that can only be called once:
+
+```rust
+fn forward<F>(f: F) -> impl FnOnce(i32) -> Option<i32>
+    where F: FnOnce(i32) -> i32
+{
+    |x| {
+        let value = f(x);
+        if value % 2 == 0 {
+            Some(value)
+        } else {
+            None
+        }
+    }
+}
+
+fn main() {
+    let f = forward(|x| x * 3);
+
+    assert_eq!(f(2), Some(6));
+
+    // Illegal: Can't reuse `f`
+    // assert_eq!(f(3), None);
+}
+```
+]
 
 ---
 
