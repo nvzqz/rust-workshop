@@ -59,7 +59,7 @@
 
       a {
         color: #f92672;
-        text-decoration:solid;
+        text-decoration: none;
       }
       .remark-inline-code {
         line-height: 1.3em;
@@ -75,7 +75,7 @@
       #meet-ferris {
         position: absolute;
         right: -165px;
-        top: 20px;
+        top: 10px;
       }
 
       #ferris-banner {
@@ -94,6 +94,12 @@
       .remark-code-line-highlighted {
         background-color: rgb(94, 51, 67);
       }
+
+      /* Code comment style */
+      .hljs-atom-one-dark .hljs-comment, .hljs-atom-one-dark .hljs-quote {
+        color: #6e7592;
+      }
+
       .pull-left {
         float: left;
         width: 47%;
@@ -137,7 +143,7 @@ _an introduction to developing modern systems_
 
 by Nikolai Vazquez ([@nvzqz](https://github.com/nvzqz))
 
-([nvzqz.github.io/rust-workshop](https://nvzqz.github.io/rust-workshop))
+follow along: [nikolaivazquez.com/rust-workshop](https://nikolaivazquez.com/rust-workshop)
 
 ---
 
@@ -150,16 +156,18 @@ by Nikolai Vazquez ([@nvzqz](https://github.com/nvzqz))
   <img style="margin:-40px" src="img/rust-logo.svg", width="60%">
 </div>
 
-Rust is a systems programming language that:
+A systems programming language that:
 
 - Runs blazingly fast without compromise
 
-- Prevents segfaults (invalid memory access)
+- Prevents invalid memory access (segfaults)
 
 - Guarantees thread safety (via `Send` and `Sync` traits)
 
 - Is open source ([github.com/rust-lang/rust][rust])
 and actively developed by Mozilla and the community
+
+Read more at [rust-lang.org](https://www.rust-lang.org/)...
 ]
 
 ---
@@ -178,10 +186,21 @@ Supported on 4 major browsers
 
 .right-column[
 <div align="center">
-  <img style="margin: 20px" src="https://webassembly.org/css/webassembly.svg", width="60%">
+  <img style="margin: 41px" src="https://webassembly.org/css/webassembly.svg", width="60%">
 </div>
 
+A new language for the web ([announced in 2015](https://webassembly.org/roadmap/#past-milestones)) that:
 
+- Runs sandboxed alongside JavaScript, augmenting it
+
+- Gets compiled from other languages like C, C++, Rust, and eventually others
+that are garbage-collected
+
+- Is similar to `.class` files for the Java Virtual Machine
+
+- Offers maximized reliable performance by design
+
+Read more at [webassembly.org](https://webassembly.org)...
 ]
 
 ---
@@ -193,9 +212,9 @@ Supported on 4 major browsers
 ]
 
 .right-column[
-- Zero-cost abstractions
+- Abstractions with zero runtime cost
 
-- Move semantics
+- Move semantics (copying is often opt-in)
 
 - Guaranteed memory safety
 
@@ -205,9 +224,9 @@ Supported on 4 major browsers
 
 - Pattern matching
 
-- Powerful metaprogramming (macros)
+- Powerful metaprogramming (macros or build script)
 
-- Type inference
+- Type inference (knows `x` in `let x = 20;` is an `i32`)
 
 - Very minimal runtime
 
@@ -358,12 +377,14 @@ class: center, middle
 
 .right-column[
 ```python
+# Python
 def main():
     for count in range(0, 3):
         print("{}. Hello World!".format(count))
 ```
 
 ```rust
+// Rust
 fn main() {
     for count in 0..3 {
         println!("{}. Hello World!", count);
@@ -375,7 +396,7 @@ The `!` in Rust signifies that `println!()` is a macro which, unlike functions,
 takes a variable number of arguments.
 
 In Python, if `count` is not provided, the code crashes at runtime. In Rust, the
-code fails to compile if the argument for `{}` is missing.
+code fails to compile if the argument for `{}` (`Display` formatter) is missing.
 ]
 
 ---
@@ -389,6 +410,7 @@ code fails to compile if the argument for `{}` is missing.
 
 .right-column[
 ```swift
+// Swift
 enum Resource<T> {
     case busy
     case ready(T)
@@ -399,6 +421,7 @@ let res = Resource.ready(42)
 ```
 
 ```rust
+// Rust
 enum Resource<T> {
     Busy,
     Ready(T),
@@ -408,7 +431,8 @@ enum Resource<T> {
 let res = Resource::Ready(42);
 ```
 
-Enums are sum types, where a variant may store a value.
+Enums are sum types, where a variant may store a value. Here `res` can either be
+busy, ready, or unavailable, but never a combination.
 ]
 
 ---
@@ -423,6 +447,7 @@ Enums are sum types, where a variant may store a value.
 
 .right-column[
 ```cpp
+// C++
 int &push_answer(std::vector<int> &buf) {
     buf.push_back(42);
     return buf.back(); // undefined if `buf` is empty
@@ -430,6 +455,7 @@ int &push_answer(std::vector<int> &buf) {
 ```
 
 ```rust
+// Rust
 use std::os::raw::c_int;
 
 fn push_answer(buf: &mut Vec<c_int>) -> &mut c_int {
@@ -476,7 +502,7 @@ fn main() {
     x.clear();                   // empty contents of `x`
     println!("{:?}", x);         // "[]"
 
-    // Illegal because 42 was removed
+    // Illegal because 42 was removed, which `y` refers to
     // println!("{:?}", y);
 }
 ```
@@ -494,6 +520,11 @@ _a typical language topic_
 
 # Primitives
 
+Rust is strictly statically typed, but the compiler is flexible and can infer
+what type an expression is based on context. All primitives listed can be
+inferred from just literals.
+
+
 | Category                                    | &nbsp | Types |
 | :------------------------------------------ | ----- | :--- |
 | Signed integers                             | | `i8`, `i16`, `i32`, `i64`, `i128`, `isize` |
@@ -501,11 +532,13 @@ _a typical language topic_
 | Floating point numbers                      | | `f32`, `f64` |
 | Unicode scalar: `'a'`, `'α'`, `'∞'`         | | `char` |
 | Boolean: either `true` or `false`           | | `bool` |
-| Unit/empty tuple                            | | `()` |
 | Nullable value: `Some(T)` or `None`         | | `Option<T>` |
 | Either value (`Ok(T)`) or error (`Err(E)`)  | | `Result<T, E>` |
-| Arrays (homogenous): `[1, 2, 3]`            | | `[T; N]` (`[i32; 3]`) |
-| Tuples (heterogenous): `(1, true)`          | | `(T, U)` (`(i32, bool)`) |
+| Arrays (strictly homogenous): `[1, 2, 3]`   | | `[T; N]` (`[i32; 3]`) |
+| Tuples (heterogenous): `(1, true)`          | | `()`, `(T,)`, `(T, U)`, `(T, U, V)`, ... |
+
+**Note:** `(T)` is equivalent to just `T` whereas `(T,)` is a single-element
+tuple.
 
 ---
 
@@ -575,9 +608,8 @@ let rep = [42; 100]; // 42 repeated 100 times
 - Equivalent to `ArrayList` (Java) or `std::vector` (C++)
 
 ```rust
-let vec = vec![1, 2, 3, 4, 5];    // created with macro
-let rep = vec![20; vec.len()];    // 20 repeated 5 times
-let rep: Box<[i32]> = rep.into(); // fixed size slice
+let vec = vec![1, 2, 3, 4, 5]; // created with macro
+let rep = vec![20; vec.len()]; // 20 repeated 5 times
 ```
 ]
 
@@ -621,6 +653,73 @@ shuffle(&mut bytes);
 .left-column[
 ## Array Types
 ## Slices
+## Conversions
+]
+
+.right-column[
+## From `Vec<T>` to `Box<[T]>`
+
+```rust
+let fib = vec![0, 1, 1, 2, 3, 5, 8];
+let fib: Box<[i32]> = fib.to_boxed_slice();
+```
+
+Here we've converted `fib` from a resizable heap-allocated buffer of `i32` to a
+fixed-size heap-allocated slice. The conversion just resizes the same allocation
+such that `fib.capacity() == fib.len()`.
+
+Because `Vec<T>` implements the `Into<Box<[T]>>` trait, we can replace the
+`.to_boxed_slice()` call with just `.into()`:
+
+```rust
+let bocks: Box<[&str]> = vec!["hello", "world"].into();
+```
+]
+
+---
+
+.left-column[
+## Array Types
+## Slices
+## Conversions
+
+See [playground](https://play.rust-lang.org/?version=nightly&mode=debug&edition=2015&gist=363c95d83df87f6249cddd8016090eb6)
+]
+
+.right-column[
+## From `&[T]` to `&[T; N]` (or `&mut`/`Box`)
+
+Conversions with the `From` and `Into` traits always succeed. However there's
+also `TryFrom` and `TryInto` which may return errors if converting fails:
+
+```rust
+#![feature(try_from)] // requires nightly Rust
+
+use std::convert::TryInto;
+
+fn main() {
+    // We can reference an array literal
+    let slice: &[i32] = &[1, 2, 3];
+
+    // Unwraps the result, which will `panic!()` on error
+    let array: &[i32; 3] = slice.try_into().unwrap();
+
+    println!("Got array of 3 elements: {:?}", array);
+}
+```
+
+A `&[i32]` carries size with the address whereas `&[i32; 3]` is just the
+address since the size is known at compile time.
+
+**Fun fact:** I added these to the standard library myself! 😁
+]
+
+---
+
+.left-column[
+## Array Types
+## Slices
+## Conversions
 ## Indexing
 ]
 
@@ -637,7 +736,7 @@ enum Index {
     Two,
 }
 
-type Array = [i32; 3];
+type Array = [i32; 3]; // type alias
 
 fn party_crashing_index(a: &Array, i: usize) -> &i32 {
     // Crash/panic if `i >= a.len()`
@@ -656,6 +755,7 @@ fn sober_index(a: &Array, i: Index) -> &i32 {
 .left-column[
 ## Array Types
 ## Slices
+## Conversions
 ## Indexing
 ]
 
@@ -690,6 +790,7 @@ sober_index: ; call to `party_crashing_index` inlined
 .left-column[
 ## Array Types
 ## Slices
+## Conversions
 ## Indexing
 
 <img style="margin-top:-30px" src="img/marvin_pointing.jpg", width="90%">
@@ -707,7 +808,7 @@ fn sane_indexing(a: &[i32], i: usize) {
     if let Some(x) = a.get(i) {
         println!("x safely equals {}", x);
     } else {
-        println!("{} < {}", i, a.len());
+        assert!(i >= a.len());
     }
 }
 ```
@@ -743,16 +844,16 @@ have **nothing** to do with each other_
 ]
 
 .right-column[
-## `&str`
+## `str`
 
 ```rust
 let s: &str = "I will never change";
 ```
 
-- Called a "string slice"
+- Called a "string slice", where `&str` is a view into memory stored statically
+or on the stack/heap
 
-- View into memory ("fat" pointer: address & size) stored statically or on the
-stack/heap
+- Dynamic size; requires a "fat" pointer: address & size
 
 - Can be converted to `String` with allocation cost
 
@@ -766,7 +867,7 @@ let s: String = "I can change".into();
 
 - Growable buffer
 
-- Can be converted to `&str` at no cost
+- Can be converted to `&str` at no runtime cost
 ]
 
 ---
@@ -789,6 +890,35 @@ gimme(slice);  // `slice` is already a reference
 ```
 
 Rust does this conversion automatically because it has zero computational cost.
+
+The same applies to converting `&mut String` to `&mut str`, like with converting
+`&mut Vec<T>` to `&mut [T]`.
+]
+
+---
+
+.left-column[
+## String Types
+]
+
+.right-column[
+The `String` type can _also_ be converted to `Box<str>`:
+
+```rust
+let owned: String = "You own me".into();
+let other: Box<str> = owned.into_boxed_str(); // or `.into()`
+
+gimme(&other);
+
+// Illegal because `owned`'s contents have been
+// moved to `other`; more on this later!
+// gimme(&owned);
+```
+
+`Box<str>` is also heap allocated. But unlike `String`, it is fixed in size.
+
+This conversion takes `owned` and shrinks the string's capacity to its length,
+and then rebinds it to `other`.
 ]
 
 ---
@@ -805,12 +935,16 @@ All strings in Rust are encoded as UTF-8.
 let english = "The same thing?";
 let spanish = "¿La misma cosa?";
 
-println!("{}\n{}", english.len(), spanish.len());
+assert_eq!(english.len(), 15);
+assert_eq!(spanish.len(), 16);
 ```
 
-This outputs **15** and **16**, which might surprise some of you.
+These strings are of length **15** and **16**, which might surprise many of you.
+English characters are ASCII and use one byte but other languages may use more.
 
-English characters use one byte but other languages may use more.
+```rust
+assert_eq!("¿".as_bytes(), [194, 191]);
+```
 
 If we can't trust characters to be one byte, what do we do?
 ]
@@ -823,15 +957,17 @@ If we can't trust characters to be one byte, what do we do?
 ]
 
 .right-column[
-
 **Solution:** iterators!
 
 ```rust
 let spanish = "¿La misma cosa?";
+let mut buf = vec![];
 
 for ch in spanish.chars() {
-    println!("{}", ch);
+    buf.push(ch);
 }
+
+assert_eq!(buf, ['¿', 'L', 'a', ' ', 'm', 'i', 's', 'm', 'a', ' ', 'c', 'o', 's', 'a', '?']);
 ```
 
 The `.chars()` iterator will provide a `char`, which can encode a Unicode code
@@ -846,43 +982,34 @@ point.
 
 ---
 
-class: center, middle, inverse
+.left-column[
+## String Types
+## Unicode
+]
 
-# Custom Types
+.right-column[
+We could also have initialized `buf` without mutating it:
 
-“if you build it, he will come”
-<br>
-\- Field of Dreams (1989)
+```rust
+let buf: Vec<char> = spanish.chars().collect();
+```
 
----
+And if we wanted to get a `String` from `buf`, that's also straightforward:
 
-<h1 align="center">Custom Types</h1>
-<p  align="center">(playground time)</p>
+```rust
+let string: String = buf.into_iter().collect();
+```
 
-- Structs (product types)
-
-- Enums (sum types)
-
-- Traits (interfaces)
-
-???
-
-- Enums
-
-  - JSON
-
-- Traits
-
-  - Iterators
-    Feeding lines with Item: AsRef str
-
-  - Encoders
+The `.into_iter()` method returns a type that implements the
+`Iterator<Item = char>` trait, and any type that implements that can be
+`.collect()`-ed into a `String`.
+]
 
 ---
 
 class: center, middle, inverse
 
-# Rust's Ownership Model
+# Rust’s Ownership Model
 
 _the fun stuff_
 
@@ -894,7 +1021,7 @@ _the fun stuff_
 
 .right-column[
 ```rust
-let mut v = vec!['a', 'b', 'c'];
+let mut v: Vec<char> = vec!['a', 'b', 'c'];
 let x = v;
 
 v.extend_from_slice(&['x', 'y', 'z']);
@@ -902,18 +1029,20 @@ v.extend_from_slice(&['x', 'y', 'z']);
 println!("{:?}", v);
 ```
 
-1. Here we allocate a vector of 3 `char`s and assign it to "v".
+1. Here we allocate a vector of 3 `char`s and assign it to `v`.
 
-2. We're going to be mutating "v", so let's keep the original somewhere. We'll
-assign "v" to "x".
+2. We're going to be mutating `v`, so let's keep the original somewhere. We'll
+assign `v` to `x`.
 
-3. Now let's go ahead and print out our original vector.
+3. Now let's go ahead and print out our original vector `v`.
 
-   When we run this, it's expected to print out:
+    **Note:** `{:?}` denotes formatting with the `Debug` trait.
 
-   ```rust
-   ['a', 'b', 'c', 'x', 'y', 'z']
-   ```
+    When we run this, it's expected to print out:
+
+    ```rust
+    ['a', 'b', 'c', 'x', 'y', 'z']
+    ```
 
 4. Let's go compile our code!
 ]
@@ -926,13 +1055,15 @@ assign "v" to "x".
 
 .right-column[
 ```rust
-let mut v = vec!['a', 'b', 'c'];
-let x = v;
+let mut v: Vec<char> = vec!['a', 'b', 'c'];
+*let x = v;
 
 v.extend_from_slice(&['x', 'y', 'z']);
 
 println!("{:?}", v);
 ```
+
+Uh oh...
 
 ```
 let x = v;
@@ -970,7 +1101,7 @@ void print_vec(vector<int> const& vec) {
 }
 
 vector<int> v = { 1, 2, 3 };
-auto x = v; // copy `v`
+*auto x = v; // copy `v`
 
 v.push_back(20);
 
@@ -985,9 +1116,9 @@ This outputs:
 1 2 3
 ```
 
-When we bind the value of "v" to "x", it copies the underlying vector.
+When we bind the value of `v` to `x`, it copies the vector.
 
-We can do the same in Rust, but it needs to be done explicitly.
+We can perform the same copy in Rust, but it needs to be done explicitly.
 ]
 
 ---
@@ -998,8 +1129,8 @@ We can do the same in Rust, but it needs to be done explicitly.
 
 .right-column[
 ```rust
-let mut v = vec!['a', 'b', 'c'];
-let x = v.clone(); // Make a copy
+let mut v: Vec<char> = vec!['a', 'b', 'c'];
+*let x = v.clone(); // Make a copy
 
 v.extend_from_slice(&['x', 'y', 'z']);
 
@@ -1019,7 +1150,7 @@ Let's compile this now...
 
 .right-column[
 ```rust
-let mut v = vec!['a', 'b', 'c'];
+let mut v: Vec<char> = vec!['a', 'b', 'c'];
 let x = v.clone(); // Make a copy
 
 v.extend_from_slice(&['x', 'y', 'z']);
@@ -1038,11 +1169,242 @@ Probably annoying, right?
 
 ---
 
+.left-column[
+## Ownership
+## Borrowing
+
+{\\__/}<br>
+( • - •)<br>
+`📦`< \\
+
+{\\__/}<br>
+( • . •)<br>
+/ > `&'a📦`
+]
+
+.right-column[
+Whenever we see a reference annotation like `'a`, it denotes a "lifetime":
+
+```rust
+fn bytes<'a>(input: &'a [u8], max: usize) -> &'a [u8] {
+    match input.get(..max) {
+
+        // return all bytes up to `max`
+        Some(slice) => slice,
+
+        // `max` out of bounds; return everything
+        None => input,
+    }
+}
+```
+
+Here the `'a` lifetime is tied to `input` and we're telling Rust that the returned
+slice lives as long as the data that `input` points to.
+]
+---
+
+.left-column[
+## Ownership
+## Borrowing
+
+{\\__/}<br>
+( • - •)<br>
+`📦`< \\
+
+{\\__/}<br>
+( • . •)<br>
+/ > `&'a📦`
+]
+
+.right-column[
+We can omit the lifetime if the output doesn't contain a reference or the output
+lifetime is unambiguous:
+
+```rust
+fn bytes(input: &[u8], max: usize) -> &[u8] {
+    // ...
+}
+```
+
+But there are cases where it's necessary! If a function takes two references, we
+want to be explicit about which one's lifetime the output is bound to:
+
+```rust
+fn get_first<'a, T>(a: &'a [T], b: &[T]) -> &'a [T] {
+    a
+}
+```
+]
+---
+
+class: center, middle, inverse
+
+# Custom Types
+
+_“if you build it, he will come”_
+<br>
+\- Field of Dreams (1989)
+
+---
+
+.left-column[
+## Structs
+
+Also known as "product types"
+
+See [playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2015&gist=865ebf043aa52af4df7dd51e60583c68)
+]
+
+.right-column[
+Structs in Rust are exactly the same as those in C, only fields are private (to
+everything outside the current module) by default.
+
+They may also contain references with a given lifetime:
+
+```rust
+#![allow(dead_code, unused_variables)]
+
+struct Data<'a> {
+    value: u32,
+    other: &'static str,
+    bytes: &'a [u8],
+}
+
+// The returned value must live as long as `bytes`'s data
+fn data<'a>(bytes: &'a [u8]) -> Data<'a> {
+    let stack_bytes = [1, 2, 3];
+    let message = "statics outlive all";
+
+    Data {
+        value: 20,
+        other: message,
+        bytes//: &stack_bytes // illegal; uncomment for why
+    }
+}
+
+fn main() {
+    // Input lifetime is extended to that of `d`
+    let d = data(&[4, 5, 6]);
+}
+```
+]
+
+---
+
+.left-column[
+## Structs
+## Enums
+
+Also known as "sum types"
+]
+
+.right-column[
+[JSON](http://json.org)—the standard notation for data on the web—can be easily
+represented within Rust's type system as an `enum`.
+
+```rust
+use std::collections::HashMap;
+
+#[derive(PartialEq)] // generates `==` code
+enum Json {
+    Object(HashMap<String, Json>),
+    Array(Vec<Json>),
+    String(String),
+    Num(f64),
+    Bool(bool),
+    Null,
+}
+
+let json = Json::Num(20.0);
+
+match &json { // pattern match by reference
+    Json::Object(ref obj) => {
+        let x: &HashMap<String, Json> = obj;
+        assert!(x == obj);
+    },
+    Json::Array(ref vec) => {
+        let x: &Vec<Json> = vec;
+        assert!(x == vec);
+    },
+    _ => {
+        // Handle all other cases
+    },
+}
+```
+]
+
+---
+
+.left-column[
+## Structs
+## Enums
+## Traits
+
+Analogous to Java "interfaces" or Swift "protocols"
+]
+
+.right-column[
+]
+
+---
+
+class: center, middle, inverse
+
+# Control Flow
+
+_‘goto’ is sooo 1980’s_
+
+---
+
+.left-column[
+## Conditions
+]
+
+.right-column[
+]
+
+---
+
+.left-column[
+## Conditions
+## Loops
+]
+
+.right-column[
+If you want, you can loop (almost) forever:
+
+```rust
+loop {
+    // run until heat death of the universe
+}
+```
+
+Because Rust loooves expressions, you can treat a `loop` as one by `break`-ing
+out with a value:
+
+```rust
+use std::time::{Duration, Instant};
+
+let start = Instant::now();
+let wait = Duration::from_secs(1);
+
+let x = loop {
+    if start.elapsed() >= wait {
+        break 30;
+    }
+};
+
+assert_eq!(x, 30);
+```
+]
+
+---
+
 class: center, middle, inverse
 
 # Let’s Get Func-y
 
-(to the playground!)
+_a fun time_
 
 ???
 
@@ -1056,7 +1418,137 @@ Ideas:
 
 ---
 
-<h1 align="center">Rust Resources</h1>
+class: center, middle, inverse
+
+# Parallelism
+
+_let’s make full use of that expensive CPU_
+
+---
+
+.left-column[
+## Multithreading
+
+See [playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2015&gist=ab111702bc2738316f038b86fff0f33b)
+]
+
+.right-column[
+The standard library lets us easily spawn new execution paths for other CPU
+cores to process:
+
+```rust
+use std::thread;
+
+fn main() {
+    let mut handles = vec![];
+
+    for i in 0..4 {
+        let name: String = format!("Thread {}", i);
+
+        handles.push(thread::spawn(move || {
+            let id = thread::current().id();
+            println!("{} = {:?}", name, id);
+        }));
+    }
+
+    println!("Main thread = {:?}", thread::current().id());
+
+    for handle in handles {
+        // Wait for spawned child threads to finish
+        handle.join().unwrap();
+    }
+}
+```
+
+We `move` each `name` instance into the child closure, making the child scope
+responsible for deallocating it.
+]
+
+---
+
+.left-column[
+## Multithreading
+]
+
+.right-column[
+If we don't want to handle spawning threads or only want threads for short-lived
+tasks, [Rayon](https://github.com/rayon-rs/rayon) is the perfect library!
+
+```rust
+fn double(values: &mut [i32]) {
+    values.iter_mut().for_each(|i| *i *= 2);
+}
+```
+
+With it, we can _easily_ make the above code use all available cores:
+
+```rust
+extern crate rayon;
+
+use rayon::prelude::*;
+
+fn par_double(values: &mut [i32]) {
+    values.par_iter_mut().for_each(|i| *i *= 2);
+}
+```
+
+Notice that it gracefully handles mutability of each element in `values`.
+
+**Tip:** depending on input size, `double()` can outperform `par_double()` due
+to factors like rayon's bookkeeping overhead. Benchmark accordingly!
+]
+
+---
+
+.left-column[
+## Multithreading
+## SIMD
+]
+
+.right-column[
+Rust can emit Single Instruction, Multiple Data
+([SIMD](https://en.wikipedia.org/wiki/SIMD)) operations automagically via
+[auto-vectorization](https://en.wikipedia.org/wiki/Automatic_vectorization):
+
+```rust
+// LLVM knows how to load, add, and write
+// multiple values simultaneously
+pub fn sum(a: &[u8], b: &[u8], c: &mut [u8]) {
+    for ((a, b), c) in a.iter().zip(b).zip(c) {
+        *c = *a + *b;
+    }
+}
+```
+
+See generated assembly @ [godbolt.org/z/51Qx5U](https://godbolt.org/z/51Qx5U)
+
+Or we can explicitly use these instructions in a cross-platform way
+(`sse`/`avx` on x86, `neon` on AArch64):
+
+```rust
+extern crate packed_simd;
+
+use packed_simd::i32x4;
+
+let a = i32x4::new(1, 2, 3, 4);
+let b = i32x4::new(5, 6, 7, 8);
+assert_eq!(a + b, i32x4::new(6, 8, 10, 12));
+```
+]
+
+---
+
+class: center, middle, inverse
+
+<img src="img/wasm-ferris.png" width="40%">
+
+# Intro to WebAssembly
+
+_targeting the modern web at high speeds_
+
+---
+
+<h1 align="center">Learning Resources</h1>
 
 ## [Rust by Example](https://rustbyexample.com/)
 
@@ -1067,9 +1559,17 @@ standard libraries.
 
 An official introductory book on Rust.
 
-## [Awesome Rust](https://github.com/rust-unofficial/awesome-rust)
+## [Rust WASM Book](https://rustwasm.github.io/book/)
 
-A curated list of Rust code and resources.
+An official introductory book on targeting WebAssembly with Rust.
+
+---
+
+class: center, middle, inverse
+
+<img src="img/qa-ferris.png" width="50%">
+
+# Q & A
 
 [rust]:   https://github.com/rust-lang/rust/
 [play]:   https://play.rust-lang.org/
