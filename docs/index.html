@@ -44,6 +44,10 @@
         background: black; /* match slide container color with slides */
       }
 
+      .construction {
+        background: rgb(32, 32, 32);
+        color: white;
+      }
       .inverse {
         background: #3c2d9e;
         color: #f92672;
@@ -162,7 +166,7 @@ A systems programming language that:
 
 - Prevents invalid memory access (segfaults)
 
-- Guarantees thread safety (via `Send` and `Sync` traits)
+- Prevents data races
 
 - Is open source ([github.com/rust-lang/rust][rust])
 and actively developed by Mozilla and the community
@@ -458,7 +462,7 @@ int &push_answer(std::vector<int> &buf) {
 // Rust
 fn push_answer(buf: &mut Vec<i32>) -> &mut i32 {
     buf.push(42);
-    buf.last_mut().unwrap() // crash if `buf` is empty
+    buf.last_mut().unwrap() // panic if `buf` is empty
 }
 ```
 
@@ -1051,6 +1055,10 @@ assign `v` to `x`.
 
 .left-column[
 ## Ownership
+
+How it feels fighting Rust:
+
+<img src="img/fighting_rust.jpg" width="85%" style="border-radius:6px; box-shadow: 0px 4px 10px #999;">
 ]
 
 .right-column[
@@ -1066,7 +1074,7 @@ println!("{:?}", x);
 
 Uh oh...
 
-```
+```rust
 let x = v;
     - value moved here
 
@@ -1853,6 +1861,158 @@ class: center, middle, inverse
 # Intro to WebAssembly
 
 _targeting the modern web at high speeds_
+
+following [rustwasm.github.io/book](https://rustwasm.github.io/book/introduction.html)
+
+---
+
+<h1 align="center">What is WebAssembly?</h1>
+
+.pull-left[
+WebAssembly is comprised of two formats that represent the same structures,
+albeit in different ways:
+
+1. The `.wat` text format (called `wat` for
+"<span style="color:#f92672">W</span>eb
+<span style="color:#f92672">A</span>ssembly
+<span style="color:#f92672">T</span>ext") uses
+[S-expressions](https://en.wikipedia.org/wiki/S-expression), and
+resembles the Lisp family of languages like Scheme and Clojure
+
+2. The `.wasm` binary format is lower-level and intended for consumption
+directly by wasm virtual machines; it is conceptually similar to ELF and Mach-O
+]
+
+.pull-right[
+For reference, here is a factorial function in `wat`:
+
+```wasm
+(module
+  (func $fac (param f64) (result f64)
+    get_local 0
+    f64.const 1
+    f64.lt
+    if (result f64)
+      f64.const 1
+    else
+      get_local 0
+      get_local 0
+      f64.const 1
+      f64.sub
+      call $fac
+      f64.mul
+    end)
+  (export "fac" (func $fac)))
+```
+]
+
+---
+
+<h1 align="center">Is WebAssembly Just for the Web?</h1>
+
+No; in general, WASM makes _no assumptions_ about its host environment! Thus, it
+makes sense to speculate that WASM will become a "portable executable" format
+that is used in a variety of contexts in the future.
+
+There exists a microkernel, [Nebulet](https://github.com/nebulet/nebulet), that:
+
+- Implements a WASM "usermode" that runs in Ring 0
+- Uses the [Cranelift](https://github.com/CraneStation/cranelift) compiler to
+convert WASM to machine code
+
+For the most part, however, WASM is mostly related to JavaScript.
+---
+
+<h1 align="center">Setup</h1>
+
+Clone the project template with this command:
+
+```sh
+cargo generate --git https://github.com/rustwasm/wasm-pack-template
+```
+
+This should prompt you for the new project's name.
+
+We will use `wasm-game-of-life`.
+
+.pull-left[
+The contents should look like this:
+
+```
+wasm-game-of-life/
+├── Cargo.toml
+├── LICENSE_APACHE
+├── LICENSE_MIT
+├── README.md
+└── src
+    ├── lib.rs
+    └── utils.rs
+```
+]
+
+.pull-right[
+To build this template, run:
+
+```sh
+wasm-pack build
+```
+
+```
+pkg/
+├── package.json
+├── README.md
+├── wasm_game_of_life_bg.wasm
+├── wasm_game_of_life.d.ts
+└── wasm_game_of_life.js
+```
+]
+
+---
+
+<h1 align="center">Cownway's Game of Life</h1>
+
+.pull-left[
+Given a 2D grid of cells where each is either alive or dead, each tick updates
+the grid accordingly:
+
+1. Any live cell with fewer than two live neighbours dies, as if caused by
+underpopulation.
+
+2. Any live cell with two or three live neighbours lives on to the next
+generation.
+
+3. Any live cell with more than three live neighbours dies, as if by
+overpopulation.
+
+4. Any dead cell with exactly three live neighbours becomes a live cell, as if
+by reproduction.
+]
+
+.pull-right[
+<div align="center">
+  <img src="img/game_of_life.gif">
+</div>
+
+Given this initial universe:
+
+<div align="center">
+  <img src="img/game_of_life_initial_universe.png" width="20%">
+</div>
+
+After the first tick, we get:
+
+<div align="center">
+  <img src="img/game_of_life_next_universe.png" width="20%">
+</div>
+]
+
+---
+
+class: center, middle, construction
+
+# Under Construction 😅
+
+<img src="https://cdn.dribbble.com/users/167298/screenshots/2148884/construction-machine.gif" width="50%">
 
 ---
 
