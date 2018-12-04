@@ -456,9 +456,7 @@ int &push_answer(std::vector<int> &buf) {
 
 ```rust
 // Rust
-use std::os::raw::c_int;
-
-fn push_answer(buf: &mut Vec<c_int>) -> &mut c_int {
+fn push_answer(buf: &mut Vec<i32>) -> &mut i32 {
     buf.push(42);
     buf.last_mut().unwrap() // crash if `buf` is empty
 }
@@ -466,7 +464,7 @@ fn push_answer(buf: &mut Vec<c_int>) -> &mut c_int {
 
 In C++, if `buf` is resized after calling `push_answer()`, the returned pointer
 becomes invalid unbeknownst to you. Rust prevents accessing the returned
-`&mut c_int` if `buf` is accessed within the same scope, since both point to the
+`&mut i32` if `buf` is accessed within the same scope, since both point to the
 same mutable data (enforced mutual exclusion).
 ]
 
@@ -547,9 +545,9 @@ tuple.
 .pull-left[
 ## Rust-style (safe)
 
-- `&T` (immutable borrow)
+- `&T` (immutable, shared borrow)
 
-- `&mut T` (mutable, exclusive borrow)
+- `&mut T` (mutable, mutex borrow)
 
 - `Box<T>` (mutable, owned)
 
@@ -571,7 +569,7 @@ with move semantics, or stored in `static` values.
 Raw, nullable pointers that you can find in C as `const T*` and `T*`, but can
 have unsized types (`*const str`).
 
-Do not implement `Send` and _can't_ be shared between threads nor stored in
+Do not implement `Send` and _can't_ be sent between threads nor stored in
 `static` values.
 ]
 
@@ -1305,6 +1303,49 @@ Also known as "sum types"
 ]
 
 .right-column[
+We can define some of Rust's primitives as enums:
+
+```rust
+enum bool {
+    true,
+    false,
+}
+
+enum Option<T>{
+    Some(T),
+    None,
+}
+
+enum Result<T, E> {
+    Ok(T),
+    Err(E),
+}
+```
+
+Enums can also be defined in some funky ways:
+
+```rust
+enum Value<'a> {
+    Pair {                // struct variant
+        cond: bool,
+        s: &'a str,
+    },
+    Bytes(&'a [u8], i32), // tuple variant
+    Nothing,              // empty variant
+}
+```
+]
+
+---
+
+.left-column[
+## Structs
+## Enums
+
+Also known as "sum types"
+]
+
+.right-column[
 [JSON](http://json.org)—the standard notation for data on the web—can be easily
 represented within Rust's type system as an `enum`.
 
@@ -1333,7 +1374,7 @@ match &json { // pattern match by reference
 *       assert!(x == vec);
     },
     _ => {
-        // Handle all other cases
+        // Must handle all other cases
     },
 }
 ```
@@ -1485,11 +1526,11 @@ if let Some(x) = x {
 }
 ```
 
-With `match`, we can do neat operations such as:
+With `match`, we can do neat things such as:
 
 - Treating it as an expression
-
 - Having conditions for certain branches
+- Ensuring branching is exhaustive
 
 ```rust
 let x: Result<i32, Error> = Ok(20);
@@ -1503,7 +1544,7 @@ let y = match x {
 assert_eq!(y, 140);
 ```
 
-Think of it like a `switch` statement with superpowers
+Think of it like a `switch` statement with superpowers!
 ]
 
 ---
@@ -1545,6 +1586,38 @@ assert_eq!(x, 30);
 
 ---
 
+.left-column[
+## Conditions
+## Pattern Matching
+## Loops
+## Returning
+]
+
+.right-column[
+You may have been surprised by the lack of `return` statements in functions so
+far. Returning a value is implicit if it's the last expression in a function.
+
+However, Rust actually does have a `return` keyword:
+
+```rust
+fn get_value() -> i32 {
+    mut let x: i32 = // ...
+
+    loop {
+        do_something(&mut x);
+
+        if x % 2 == 0 {
+            return x;
+        } else if x % 3 == 0 {
+            return x * 2;
+        }
+    }
+}
+```
+]
+
+---
+
 class: center, middle, inverse
 
 # Let’s Get Func-y
@@ -1555,6 +1628,8 @@ _a fun time_
 
 .left-column[
 ## [`Fn`](https://doc.rust-lang.org/std/ops/trait.Fn.html) trait
+
+See [playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2015&gist=42aaf44a61ef3340b4ec86e20d758ac9)
 ]
 
 .right-column[
@@ -1578,9 +1653,33 @@ assert_eq!(value, 3);
 .left-column[
 ## [`Fn`](https://doc.rust-lang.org/std/ops/trait.Fn.html) trait
 ## [`FnMut`](https://doc.rust-lang.org/std/ops/trait.FnMut.html) trait
+
+See [playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2015&gist=1ff853d1ec3b14f3aa227fb20a1d9797)
 ]
 
 .right-column[
+Used for functions or closures that can be called repeatedly and have mutable
+state:
+
+```rust
+let mut x = 0;
+
+// Closure that implements `FnMut` by mutating `x`
+let mut plus_plus = || -> i32 {
+    x += 1;
+    x
+};
+
+for _ in 0..10 {
+    print!("{} ", plus_plus());
+}
+```
+
+This outputs:
+
+```rust
+1 2 3 4 5 6 7 8 9 10
+```
 ]
 
 ---
@@ -1589,10 +1688,15 @@ assert_eq!(value, 3);
 ## [`Fn`](https://doc.rust-lang.org/std/ops/trait.Fn.html) trait
 ## [`FnMut`](https://doc.rust-lang.org/std/ops/trait.FnMut.html) trait
 ## [`FnOnce`](https://doc.rust-lang.org/std/ops/trait.FnOnce.html) trait
+
+See [playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2015&gist=31054cae8c0bd9dca58be4931af2178e)
 ]
 
 .right-column[
-We can actually return an anonymous function that can only be called once:
+Used for functions or closures that can only be called once and mmay have
+mutable state.
+
+We can return an anonymous `FnOnce` function:
 
 ```rust
 fn forward<F>(f: F) -> impl FnOnce(i32) -> Option<i32>
@@ -1608,15 +1712,16 @@ fn forward<F>(f: F) -> impl FnOnce(i32) -> Option<i32>
     }
 }
 
-fn main() {
-    let f = forward(|x| x * 3);
+let f = forward(|x| x * 3);
 
-    assert_eq!(f(2), Some(6));
+assert_eq!(f(2), Some(6));
 
-    // Illegal: Can't reuse `f`
-    // assert_eq!(f(3), None);
-}
+// Illegal: Can't reuse `f`
+// assert_eq!(f(3), None);
 ```
+
+This ties back to Rust's ownership rules because `FnOnce` can only be called by
+value, not by reference.
 ]
 
 ---
